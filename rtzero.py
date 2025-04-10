@@ -1,4 +1,4 @@
-VERSION = '0.2'
+VERSION = '0.21'
 
 from machine import Pin, PWM, Timer, ADC, SPI
 from micropython import schedule, const
@@ -469,7 +469,7 @@ class Display:
         self._scroll = 0
         self._buf = bytearray(_CHUNK * 2)
         self._colormap = bytearray(b'\x00\x00\xFF\xFF') #default white foregraound, black background
-        self._x = 40
+        self._x = 10
         self._y = 10
         self._font = _font
         self.scrolling = False
