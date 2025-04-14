@@ -34,3 +34,6 @@ jobs:
         git add manifest.json
         git commit -m "Auto-generate manifest.json" || echo "No changes to commit"
         git push
+
+permissions:
+  contents: write  # Needed to allow git push
