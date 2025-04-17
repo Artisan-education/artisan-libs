@@ -12,7 +12,7 @@ _SLOT_MAP = {
     'F': (26, 27),
 }
 
-class IMU:
+class GyroAxel:
     def __init__(self, slot='A', address=0x68):
         if slot not in _SLOT_MAP:
             raise ValueError("Invalid slot. Use A, B, D, E, or F (C does not support I2C).")
