@@ -13,7 +13,7 @@ _SLOT_MAP = {
 # BME280 I2C address
 _BME280_ADDR = 0x76
 
-class BME280:
+class Climate:
     def __init__(self, slot='A'):
         if slot not in _ SLOT_MAP:
             raise ValueError("Invalid slot. Use A, B, D, E, or F (C is not I2C-compatible)")
