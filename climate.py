@@ -15,10 +15,10 @@ _BME280_ADDR = 0x76
 
 class Climate:
     def __init__(self, slot='A'):
-        if slot not in _ SLOT_MAP:
+        if slot not in _SLOT_MAP:
             raise ValueError("Invalid slot. Use A, B, D, E, or F (C is not I2C-compatible)")
 
-        sda_pin, scl_pin = _ SLOT_MAP[slot]
+        sda_pin, scl_pin = _SLOT_MAP[slot]
         bus = 0 if slot in ['A', 'D'] else 1
         self.i2c = I2C(bus, scl=Pin(scl_pin), sda=Pin(sda_pin))
         self.addr = _BME280_ADDR
