@@ -37,27 +37,23 @@ def rgb2hsv(r, g, b):
         h /= 6
     return {'hue':h*360,'sat':s, 'val':v}
     
+_SLOT_MAP = {
+    'A': (0, 0, 1),
+    'B': (1, 2, 3),
+    'D': (0, 4, 5),
+    'E': (1, 6, 7),
+    'F': (1, 26, 27),
+    'G': (0, 16, 17),
+    'H': (1, 18, 19),
+}
+
 class ColorSensor(object):
     
     def __init__(self, slot, freq=400000):
-        slot_map = {
-            'A': {'sda': 0,  'scl': 1,  'bus': 0},
-            'B': {'sda': 2,  'scl': 3,  'bus': 1},
-            'C': None,  # Not I2C capable
-            'D': {'sda': 4,  'scl': 5,  'bus': 0},
-            'E': {'sda': 6,  'scl': 7,  'bus': 1},
-            'F': {'sda': 26, 'scl': 27, 'bus': 1},
-        }
-
-        if slot not in slot_map:
-            raise ValueError(f"Invalid slot '{slot}'. Choose from A, B, C, D, E, F.")
-
-        if slot_map[slot] is None:
-            raise RuntimeError("Slot 'C' (GP28, GP22) does not support I2C.")
-
-        sda_pin = slot_map[slot]['sda']
-        scl_pin = slot_map[slot]['scl']
-        bus = slot_map[slot]['bus']
+        slot = slot.upper()
+        if slot not in _SLOT_MAP:
+            raise ValueError(f"Invalid slot '{slot}'. Use A, B, D, E, or F (C is not I2C-compatible)")
+        bus, sda_pin, scl_pin = _SLOT_MAP[slot]
 
         try:
             self.i2c = I2C(bus, freq=freq, sda=Pin(sda_pin), scl=Pin(scl_pin))

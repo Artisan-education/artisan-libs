@@ -5,19 +5,22 @@ from machine import I2C, Pin
 import time
 
 _SLOT_MAP = {
-    'A': (0, 1),
-    'B': (2, 3),
-    'D': (4, 5),
-    'E': (6, 7),
-    'F': (26, 27),
+    'A': (0, 0, 1),
+    'B': (1, 2, 3),
+    'D': (0, 4, 5),
+    'E': (1, 6, 7),
+    'F': (1, 26, 27),
+    'G': (0, 16, 17),
+    'H': (1, 18, 19),
 }
 
 class GyroAxel:
     def __init__(self, slot='A', address=0x68):
+        slot = slot.upper()
         if slot not in _SLOT_MAP:
-            raise ValueError("Invalid slot. Use A, B, D, E, or F (C does not support I2C).")
-        sda_pin, scl_pin = _SLOT_MAP[slot]
-        self.i2c = I2C(0, sda=Pin(sda_pin), scl=Pin(scl_pin))
+            raise ValueError(f"Invalid slot '{slot}'. Use A, B, D, E, or F (C is not I2C-compatible)")
+        bus, sda_pin, scl_pin = _SLOT_MAP[slot]
+        self.i2c = I2C(bus, sda=Pin(sda_pin), scl=Pin(scl_pin))
         self.address = address
         self.wake()
 
