@@ -7,9 +7,9 @@ import struct
 from machine import SPI, Pin
 
 # VGA font modules
-import large as font3
-import medium   as font2
-import small    as font1
+import fonts.large   as font3
+import fonts.medium  as font2
+import fonts.small   as font1
 
 # Color constants (RGB565)
 BLACK   = 0x0000
