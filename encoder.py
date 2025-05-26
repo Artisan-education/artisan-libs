@@ -52,6 +52,8 @@ _SLOT_MAP = {
     'D': (4, 5),
     'E': (6, 7),
     'F': (26, 27),
+    'G': (16, 17),
+    'H': (18, 19),
 }
 
 def _wrap(value, incr, lower_bound, upper_bound):
