@@ -2,6 +2,7 @@ name: Generate manifest.json
 
 on:
   push:
+    branches:
   workflow_dispatch:  # allows manual triggering
 
 jobs:

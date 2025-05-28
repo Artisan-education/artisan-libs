@@ -1,4 +1,4 @@
-VERSION = '0.21'
+VERSION = '0.22'
 
 from machine import Pin, PWM, Timer, ADC, SPI
 from micropython import schedule, const
