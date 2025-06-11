@@ -57,7 +57,7 @@ def _trigger(rotary_instance):
 
 def _irq_supported():
     try:
-        p = Pin(0, Pin.IN)
+        p = Pin(20, Pin.IN)
         p.irq(lambda pin: None, Pin.IRQ_FALLING)
         return True
     except:
