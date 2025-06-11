@@ -1,9 +1,9 @@
 from machine import Pin
+from time import sleep_ms
 
-_DIR_CW = 0x10  # Clockwise step
-_DIR_CCW = 0x20  # Counter-clockwise step
+_DIR_CW = 0x10
+_DIR_CCW = 0x20
 
-# Rotary Encoder States
 _R_START = 0x0
 _R_CW_1 = 0x1
 _R_CW_2 = 0x2
@@ -14,18 +14,14 @@ _R_CCW_3 = 0x6
 _R_ILLEGAL = 0x7
 
 _transition_table = [
-
-    # |------------- NEXT STATE -------------|            |CURRENT STATE|
-    # CLK/DT    CLK/DT     CLK/DT    CLK/DT
-    #   00        01         10        11
-    [_R_START, _R_CCW_1, _R_CW_1,  _R_START],             # _R_START
-    [_R_CW_2,  _R_START, _R_CW_1,  _R_START],             # _R_CW_1
-    [_R_CW_2,  _R_CW_3,  _R_CW_1,  _R_START],             # _R_CW_2
-    [_R_CW_2,  _R_CW_3,  _R_START, _R_START | _DIR_CW],   # _R_CW_3
-    [_R_CCW_2, _R_CCW_1, _R_START, _R_START],             # _R_CCW_1
-    [_R_CCW_2, _R_CCW_1, _R_CCW_3, _R_START],             # _R_CCW_2
-    [_R_CCW_2, _R_START, _R_CCW_3, _R_START | _DIR_CCW],  # _R_CCW_3
-    [_R_START, _R_START, _R_START, _R_START]]             # _R_ILLEGAL
+    [_R_START, _R_CCW_1, _R_CW_1,  _R_START],
+    [_R_CW_2,  _R_START, _R_CW_1,  _R_START],
+    [_R_CW_2,  _R_CW_3,  _R_CW_1,  _R_START],
+    [_R_CW_2,  _R_CW_3,  _R_START, _R_START | _DIR_CW],
+    [_R_CCW_2, _R_CCW_1, _R_START, _R_START],
+    [_R_CCW_2, _R_CCW_1, _R_CCW_3, _R_START],
+    [_R_CCW_2, _R_START, _R_CCW_3, _R_START | _DIR_CCW],
+    [_R_START, _R_START, _R_START, _R_START]]
 
 _transition_table_half_step = [
     [_R_CW_3,            _R_CW_2,  _R_CW_1,  _R_START],
@@ -37,65 +33,48 @@ _transition_table_half_step = [
     [_R_START,           _R_START, _R_START, _R_START],
     [_R_START,           _R_START, _R_START, _R_START]]
 
-
-_STATE_MASK =0x07
-_DIR_MASK =0x30
-
-
-IRQ_RISING_FALLING = Pin.IRQ_RISING | Pin.IRQ_FALLING
-
+_STATE_MASK = 0x07
+_DIR_MASK = 0x30
 
 _SLOT_MAP = {
-    'A': (0, 1),
-    'B': (2, 3),
-    'C': (28, 22),
-    'D': (4, 5),
-    'E': (6, 7),
-    'F': (26, 27),
-    'G': (16, 17),
-    'H': (18, 19),
+    'A': (0, 1), 'B': (2, 3), 'C': (28, 22), 'D': (4, 5),
+    'E': (6, 7), 'F': (26, 27)
 }
 
 def _wrap(value, incr, lower_bound, upper_bound):
-    range = upper_bound - lower_bound + 1
+    range_ = upper_bound - lower_bound + 1
     value = value + incr
-
     if value < lower_bound:
-        value += range * ((lower_bound - value) // range + 1)
-
-    return lower_bound + (value - lower_bound) % range
-
+        value += range_ * ((lower_bound - value) // range_ + 1)
+    return lower_bound + (value - lower_bound) % range_
 
 def _bound(value, incr, lower_bound, upper_bound):
     return min(upper_bound, max(lower_bound, value + incr))
-
 
 def _trigger(rotary_instance):
     for listener in rotary_instance._listener:
         listener()
 
+def _irq_supported():
+    try:
+        p = Pin(0, Pin.IN)
+        p.irq(lambda pin: None, Pin.IRQ_FALLING)
+        return True
+    except:
+        return False
 
-class Encoder(object):
-
+class Encoder:
     RANGE_UNBOUNDED = 1
     RANGE_WRAP = 2
     RANGE_BOUNDED = 3
 
-    def __init__(
-            self, 
-            slot,
-            min_val=0, 
-            max_val=10, 
-            incr=1, 
-            reverse=False, 
-            range_mode=RANGE_UNBOUNDED, 
-            half_step=False, 
-            invert=False,
-            pull_up=False
-            ):
-        
+    def __init__(self, slot, min_val=0, max_val=10, incr=1,
+                 reverse=False, range_mode=RANGE_UNBOUNDED,
+                 half_step=False, invert=False, pull_up=False):
+
         if slot not in _SLOT_MAP:
             raise ValueError(f"Invalid slot '{slot}'. Choose from A–F.")
+
         self._clk_pin, self._dt_pin = _SLOT_MAP[slot]
         self._min_val = min_val
         self._max_val = max_val
@@ -108,29 +87,85 @@ class Encoder(object):
         self._invert = invert
         self._listener = []
         self._direction = 0
+        self._simulate_mode = not _irq_supported()
 
-        
-        
         if pull_up:
             self._pin_clk = Pin(self._clk_pin, Pin.IN, Pin.PULL_UP)
             self._pin_dt = Pin(self._dt_pin, Pin.IN, Pin.PULL_UP)
         else:
             self._pin_clk = Pin(self._clk_pin, Pin.IN)
             self._pin_dt = Pin(self._dt_pin, Pin.IN)
-        self._hal_enable_irq()
+
+        if not self._simulate_mode:
+            self._hal_enable_irq()
 
     def _hal_enable_irq(self):
-        self._pin_clk.irq(self._process_rotary_pins, IRQ_RISING_FALLING)
-        self._pin_dt.irq(self._process_rotary_pins, IRQ_RISING_FALLING)
+        self._pin_clk.irq(self._process_rotary_pins, Pin.IRQ_RISING | Pin.IRQ_FALLING)
+        self._pin_dt.irq(self._process_rotary_pins, Pin.IRQ_RISING | Pin.IRQ_FALLING)
 
     def _hal_disable_irq(self):
-        self._pin_clk.irq(None, 0)
-        self._pin_dt.irq(None, 0)  
+        self._pin_clk.irq(None)
+        self._pin_dt.irq(None)
+
+    def _read_encoder(self):
+        clk_dt_pins = (self._pin_clk.value() << 1) | self._pin_dt.value()
+        if self._invert:
+            clk_dt_pins = ~clk_dt_pins & 0x03
+
+        if self._half_step:
+            self._state = _transition_table_half_step[self._state & _STATE_MASK][clk_dt_pins]
+        else:
+            self._state = _transition_table[self._state & _STATE_MASK][clk_dt_pins]
+
+        direction = self._state & _DIR_MASK
+        incr = 0
+        if direction == _DIR_CW:
+            incr = self._incr
+            self._direction = 1
+        elif direction == _DIR_CCW:
+            incr = -self._incr
+            self._direction = -1
+
+        incr *= self._reverse
+
+        if self._range_mode == self.RANGE_WRAP:
+            self._value = _wrap(self._value, incr, self._min_val, self._max_val)
+        elif self._range_mode == self.RANGE_BOUNDED:
+            self._value = _bound(self._value, incr, self._min_val, self._max_val)
+        else:
+            self._value += incr
+
+        return direction != 0
+
+    def _process_rotary_pins(self, pin):
+        old_value = self._value
+        updated = self._read_encoder()
+        if updated and self._listener:
+            try:
+                _trigger(self)
+            except Exception as e:
+                print("Listener error:", e)
+
+    def value(self):
+        if self._simulate_mode:
+            sleep_ms(2)
+            self._process_rotary_pins(None)
+        return self._value
+
+    def direction(self):
+        return self._direction
+
+    def reset(self):
+        self._value = 0
+
+    def close(self):
+        if not self._simulate_mode:
+            self._hal_disable_irq()
 
     def set(self, value=None, min_val=None, incr=None,
             max_val=None, reverse=None, range_mode=None):
-        # disable DT and CLK pin interrupts
-        self._hal_disable_irq()
+        if not self._simulate_mode:
+            self._hal_disable_irq()
 
         if value is not None:
             self._value = value
@@ -144,86 +179,15 @@ class Encoder(object):
             self._reverse = -1 if reverse else 1
         if range_mode is not None:
             self._range_mode = range_mode
+
         self._state = _R_START
 
-        # enable DT and CLK pin interrupts
-        self._hal_enable_irq()
-
-    def bar(self, width=20, fill_char="#", empty_char=" "):
-        pos = int((self._value - self._min_val) / (self._max_val - self._min_val) * width)
-        filled = fill_char * pos
-        empty = empty_char * (width - pos)
-        return f"[{filled}{empty}] {self._value}"
-    
-    def live_bar(self, width=20, fill_char="#", empty_char=" "):
-        pos = int((self._value - self._min_val) / (self._max_val - self._min_val) * width)
-        filled = fill_char * pos
-        empty = empty_char * (width - pos)
-        print(f"\r[{filled}{empty}] {self._value}   ", end="")
-
-    def value(self):
-        return self._value
-
-    def direction(self):
-        return self._direction
-    
-    def reset(self):
-        self._value = 0
-
-    def close(self):
-        self._hal_disable_irq()
+        if not self._simulate_mode:
+            self._hal_enable_irq()
 
     def add_listener(self, l):
         self._listener.append(l)
 
     def remove_listener(self, l):
-        if l not in self._listener:
-            raise ValueError('{} is not an installed listener'.format(l))
-        self._listener.remove(l)
-        
-    def _process_rotary_pins(self, pin):
-        old_value = self._value
-        clk_dt_pins = (self._pin_clk.value() <<
-                       1) | self._pin_dt.value()
-                       
-        if self._invert:
-            clk_dt_pins = ~clk_dt_pins & 0x03
-        # Determine next state
-        if self._half_step:
-            self._state = _transition_table_half_step[self._state &
-                                                      _STATE_MASK][clk_dt_pins]
-        else:
-            self._state = _transition_table[self._state &
-                                            _STATE_MASK][clk_dt_pins]
-        direction = self._state & _DIR_MASK
-
-        incr = 0
-        if direction == _DIR_CW:
-            incr = self._incr
-            self._direction = 1
-        elif direction == _DIR_CCW:
-            incr = -self._incr
-            self._direction = -1
-
-        incr *= self._reverse
-
-        if self._range_mode == self.RANGE_WRAP:
-            self._value = _wrap(
-                self._value,
-                incr,
-                self._min_val,
-                self._max_val)
-        elif self._range_mode == self.RANGE_BOUNDED:
-            self._value = _bound(
-                self._value,
-                incr,
-                self._min_val,
-                self._max_val)
-        else:
-            self._value = self._value + incr
-
-        try:
-            if old_value != self._value and len(self._listener) != 0:
-                _trigger(self)
-        except:
-            pass
+        if l in self._listener:
+            self._listener.remove(l)
