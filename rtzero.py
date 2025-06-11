@@ -488,6 +488,8 @@ class Display:
         self.scrolling = False
         self._scroll = 0
         self.scroll(0)
+        self._x = 10
+        self._y = 10
 
     def set_font(self, font):
         self._font = font
@@ -624,6 +626,7 @@ class Display:
 
     def erase(self, x=0, y=0, w=240, h=320):
         self.fill_rectangle(x, y, w, h)
+        
 
     def blit(self, bitbuff, x, y, w, h):
         x = min(self.width - 1, max(0, x))
@@ -680,8 +683,8 @@ class Display:
             self.fill_rectangle(0, res, self.width, self.height - res)
         return res
 
-    def write(self, text): #does character wrap, compatible with stream output
-        curx = self._x; cury = self._y
+    def write(self, text, x = 10, y = 10): #does character wrap, compatible with stream output
+        curx = x; cury = y
         char_h = font_height
         width = 0
         written = 0
@@ -725,6 +728,15 @@ class Display:
 
 
 disp = 0
+def write(text, x = 10, y = 10):
+    global disp
+    if not disp:
+        disp = Display()
+        disp.init()
+        disp.erase()
+        disp.write(str(text), x, y)
+    else:
+        disp.write(str(text), x, y)
 
 def display(x):
     global disp
@@ -737,7 +749,7 @@ def display(x):
     else:
         disp.print(str(x))
         print(x)
-
+        
 def clear():
     global disp
     if not disp:
@@ -745,6 +757,7 @@ def clear():
         disp.init()
         disp.erase()
     else:
+        disp.reset_scroll()
         disp.erase()
 ###############################################################################
 # EXCEPTIONS
@@ -1443,3 +1456,4 @@ class Potentiometer(AnalogInputDevice):
     pass
 
 Pot = Potentiometer
+
