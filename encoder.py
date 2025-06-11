@@ -1,17 +1,17 @@
 from machine import Pin
 
-_DIR_CW = const(0x10)  # Clockwise step
-_DIR_CCW = const(0x20)  # Counter-clockwise step
+_DIR_CW = 0x10  # Clockwise step
+_DIR_CCW = 0x20  # Counter-clockwise step
 
 # Rotary Encoder States
-_R_START = const(0x0)
-_R_CW_1 = const(0x1)
-_R_CW_2 = const(0x2)
-_R_CW_3 = const(0x3)
-_R_CCW_1 = const(0x4)
-_R_CCW_2 = const(0x5)
-_R_CCW_3 = const(0x6)
-_R_ILLEGAL = const(0x7)
+_R_START = 0x0
+_R_CW_1 = 0x1
+_R_CW_2 = 0x2
+_R_CW_3 = 0x3
+_R_CCW_1 = 0x4
+_R_CCW_2 = 0x5
+_R_CCW_3 = 0x6
+_R_ILLEGAL = 0x7
 
 _transition_table = [
 
@@ -38,8 +38,8 @@ _transition_table_half_step = [
     [_R_START,           _R_START, _R_START, _R_START]]
 
 
-_STATE_MASK = const(0x07)
-_DIR_MASK = const(0x30)
+_STATE_MASK =0x07
+_DIR_MASK =0x30
 
 
 IRQ_RISING_FALLING = Pin.IRQ_RISING | Pin.IRQ_FALLING
@@ -77,9 +77,9 @@ def _trigger(rotary_instance):
 
 class Encoder(object):
 
-    RANGE_UNBOUNDED = const(1)
-    RANGE_WRAP = const(2)
-    RANGE_BOUNDED = const(3)
+    RANGE_UNBOUNDED = 1
+    RANGE_WRAP = 2
+    RANGE_BOUNDED = 3
 
     def __init__(
             self, 
