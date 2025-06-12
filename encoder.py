@@ -68,7 +68,7 @@ class Encoder:
     RANGE_WRAP = 2
     RANGE_BOUNDED = 3
 
-    def __init__(self, slot, min_val=0, max_val=10, incr=1,
+    def __init__(self, slot, min_val=0, max_val=7, incr=1,
                  reverse=False, range_mode=RANGE_WRAP,
                  half_step=False, invert=False, pull_up=False):
 
