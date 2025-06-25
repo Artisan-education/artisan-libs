@@ -1,12 +1,12 @@
 {
-  "display.py": "65a0e7280e1aa347407b34ec67162b18e8d3bc3a26c5cf8b2f9eb11932d57d51",
-  "rtzero.py": "a2899cc60a0160f4dad6bd9e679783eee4dd165b7e9ca8378df7fbf731838a0b",
-  "climate.py": "724a63e3f62125151431e6f973a24acdb8f2bc7106315385eabd8d636076a043",
-  "gyroaxel.py": "02177f4172905c84d5007fef8c4f704a2ae570e26ddb69f300fd36bf9b213707",
-  "colorsensor.py": "3fe305941544ed0270e57d7f428eb087ba466aca133986d01a48bf680f379531",
-  "encoder.py": "c9799f8277feed917b64b821731407016b5faff83b41e4efee3bd71273750973",
-  "distance.py": "e1edb91b6ffac2e086b3a224cf3a93887439d014a8c44504b265773d2f466dfc",
-  "fonts/small.py": "69b123b4360b2c770c6134a604c379ce4368928d33d9823cf96d48bfac26952e",
-  "fonts/medium.py": "9b06a4c8595c0c187eb4629a93448ae03e2dcfdd70ad352ccc99d5da9dc334f4",
-  "fonts/large.py": "b31e885b15e5dc30ffb5ba18340fcfd4067449dd2c6229ebb8456cdf5ab413db"
+  ".gitignore": "7ccb7530e8566b614debc1a6b10874e2fa8ccf12d7115b862c9335adefb2c4f5",
+  "pibody.py": "c5da3eddfa7bb90c9030e309b48eaaf685824f9d956086ac7e059576b37defaa",
+  "libs/i2c/VEML6040.py": "e612061fa91874e0b993069c9a5f024c9a0f092613a57431aa382a9d713e00f6",
+  "libs/i2c/VL53L0X.py": "3db8fb04161c89a85c764fb7bfbf60a24ce443a1fead21486a4114749a1d5dbc",
+  "libs/i2c/BME280.py": "7b5612c5c75a4a0a6ad1a0f6a97b0fcf00c2f937e96e68f02c9e193c63eaae7d",
+  "libs/i2c/MPU6050.py": "ca35884b0048c0db48d42c6debc332b4a0a65eca246645b0ddfdcf22e5e0b427",
+  "libs/general/ServoPlus.py": "381303f4e54c4f5064e8df21d0bef5c4f64f476134fd9aab238fc6bbbce31dca",
+  "libs/general/BuzzerPlus.py": "370efce44723f39d9e84da177148435a3fbc00781d8192bff70d8028fa5ab884",
+  "libs/general/NeoPixelPlus.py": "6eec2422d05b232ca6669e19b4f2bd691b7b335272ac4c085797ec2ba6bbf210",
+  "libs/general/RotaryEncoder.py": "bb78ef2da48bc8b95614bfd92d2fb9acbe499c66f16760eead670e63818c58d4"
 }
