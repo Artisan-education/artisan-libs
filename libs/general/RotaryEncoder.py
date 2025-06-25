@@ -37,24 +37,10 @@ _transition_table_half_step = [
     [_R_START,           _R_START, _R_START, _R_START],
     [_R_START,           _R_START, _R_START, _R_START]]
 
-
 _STATE_MASK = const(0x07)
 _DIR_MASK = const(0x30)
 
-
 IRQ_RISING_FALLING = Pin.IRQ_RISING | Pin.IRQ_FALLING
-
-
-_SLOT_MAP = {
-    'A': (0, 1),
-    'B': (2, 3),
-    'C': (28, 22),
-    'D': (4, 5),
-    'E': (6, 7),
-    'F': (26, 27),
-    'G': (16, 17),
-    'H': (18, 19),
-}
 
 def _wrap(value, incr, lower_bound, upper_bound):
     range = upper_bound - lower_bound + 1
@@ -75,7 +61,7 @@ def _trigger(rotary_instance):
         listener()
 
 
-class Encoder(object):
+class RotaryEncoder(object):
 
     RANGE_UNBOUNDED = const(1)
     RANGE_WRAP = const(2)
@@ -83,7 +69,8 @@ class Encoder(object):
 
     def __init__(
             self, 
-            slot,
+            clk,
+            dt,
             min_val=0, 
             max_val=10, 
             incr=1, 
@@ -94,9 +81,8 @@ class Encoder(object):
             pull_up=False
             ):
         
-        if slot not in _SLOT_MAP:
-            raise ValueError(f"Invalid slot '{slot}'. Choose from A–F.")
-        self._clk_pin, self._dt_pin = _SLOT_MAP[slot]
+        self._clk_pin = clk
+        self._dt_pin = dt
         self._min_val = min_val
         self._max_val = max_val
         self._incr = incr
@@ -108,7 +94,7 @@ class Encoder(object):
         self._invert = invert
         self._listener = []
         self._direction = 0
-
+        self._old_value = 0
         
         
         if pull_up:
@@ -164,6 +150,9 @@ class Encoder(object):
     def value(self):
         return self._value
 
+    def old_value(self):
+        return self._old_value
+
     def direction(self):
         return self._direction
     
@@ -182,7 +171,7 @@ class Encoder(object):
         self._listener.remove(l)
         
     def _process_rotary_pins(self, pin):
-        old_value = self._value
+        self._old_value = self._value
         clk_dt_pins = (self._pin_clk.value() <<
                        1) | self._pin_dt.value()
                        
@@ -223,7 +212,7 @@ class Encoder(object):
             self._value = self._value + incr
 
         try:
-            if old_value != self._value and len(self._listener) != 0:
+            if self._old_value != self._value and len(self._listener) != 0:
                 _trigger(self)
         except:
             pass

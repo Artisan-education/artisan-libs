@@ -1,4 +1,4 @@
-from machine import I2C, Pin
+from machine import I2C, Pin, SoftI2C
 import time
 # BME280 default address.
 BME280_I2CADDR = 0x76
@@ -45,20 +45,10 @@ BME280_REGISTER_PRESSURE_DATA = 0xF7
 BME280_REGISTER_TEMP_DATA = 0xFA
 BME280_REGISTER_HUMIDITY_DATA = 0xFD
 
-_SLOT_MAP = {
-    'A': (0, 0, 1),
-    'B': (1, 2, 3),
-    'D': (0, 4, 5),
-    'E': (1, 6, 7),
-    'F': (1, 26, 27),
-    'G': (0, 16, 17),
-    'H': (1, 18, 19),
-}
-
 _BME280_ADDR = 0x76
 
-class Climate:
-    def __init__(self, slot, mode=BME280_OSAMPLE_1):
+class BME280:
+    def __init__(self, bus, sda, scl, mode=BME280_OSAMPLE_1, soft_i2c=False):
         if mode not in [BME280_OSAMPLE_1, BME280_OSAMPLE_2, BME280_OSAMPLE_4, BME280_OSAMPLE_8, BME280_OSAMPLE_16]:
             raise ValueError(
                 'Unexpected mode value {0}. Set mode to one of '
@@ -66,13 +56,17 @@ class Climate:
                 'BME280_ULTRAHIGHRES'.format(mode))
         self._mode = mode
 
-        slot = slot.upper()
-        if slot not in _SLOT_MAP:
-            raise ValueError(f"Invalid slot '{slot}'. Use A, B, D, E, or F (C is not I2C-compatible)")
-        bus, sda_pin, scl_pin = _SLOT_MAP[slot]
-        self._i2c = I2C(bus, scl=Pin(scl_pin), sda=Pin(sda_pin))
+        self.bus = bus
+        self.sda = sda
+        self.scl = scl
+        self.soft_i2c = soft_i2c
+
+        if self.soft_i2c:
+            self._i2c = SoftI2C(scl=Pin(self.scl), sda=Pin(self.sda))
+        else:
+            self._i2c = I2C(self.bus, scl=Pin(self.scl), sda=Pin(self.sda))
         self._address = _BME280_ADDR
-        time.sleep_ms(200)
+        time.sleep_ms(100)
         if self._address not in self._i2c.scan():
             raise RuntimeError("Climate Sensor not found on I2C bus.")
 

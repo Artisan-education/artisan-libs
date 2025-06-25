@@ -1,41 +1,36 @@
-from machine import I2C, Pin
+from machine import I2C, Pin, SoftI2C
 import utime
 
-_SLOT_MAP = {
-    'A': (0, 0, 1),
-    'B': (1, 2, 3),
-    'D': (0, 4, 5),
-    'E': (1, 6, 7),
-    'F': (1, 26, 27),
-    'G': (0, 16, 17),
-    'H': (1, 18, 19),
-}
-
-class Distance:
-    def __init__(self, slot='A', address=0x29):
-        slot = slot.upper()
-        if slot not in _SLOT_MAP:
-            raise ValueError(f"Invalid slot '{slot}'. Use A, B, D, E, or F (C is not I2C-compatible)")
-        bus, sda_pin, scl_pin = _SLOT_MAP[slot]
-
-        self.i2c = I2C(bus, scl=Pin(scl_pin), sda=Pin(sda_pin))
+class VL53L0X:
+    def __init__(self, bus, sda, scl, address=0x29, soft_i2c=False):
+        self.bus = bus
+        self.sda = sda
+        self.scl = scl
         self.address = address
+        # self.i2c = None
+        if soft_i2c:
+            self.i2c = SoftI2C(scl=Pin(self.scl), sda=Pin(self.sda))
+        else:
+            self.i2c = I2C(self.bus, scl=Pin(self.scl), sda=Pin(self.sda))
+
         self._started = False
         self._on_close = None
         self._on_motion = None
-        self._close_threshold = None
-        self._motion_threshold = None
         self._last_distance = None
         self._motion_last_trigger = 0
         self._motion_cooldown_ms = 500
+        # self._close_threshold = None
+        # self._motion_threshold = None
 
         self.min_valid_mm = 30
         self.max_valid_mm = 2000
+        
 
         utime.sleep_ms(200)
         if self.address not in self.i2c.scan():
             raise RuntimeError(f"VL53L0X not found at address {hex(self.address)}")
 
+        
         self._init_sensor()
 
     def _write(self, reg, value):

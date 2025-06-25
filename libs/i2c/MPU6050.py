@@ -1,28 +1,27 @@
 # MPU-6050 Simple MicroPython Library with Tilt Event Support
 # MIT License
 
-from machine import I2C, Pin
+from machine import I2C, Pin, SoftI2C
 import time
 
-_SLOT_MAP = {
-    'A': (0, 0, 1),
-    'B': (1, 2, 3),
-    'D': (0, 4, 5),
-    'E': (1, 6, 7),
-    'F': (1, 26, 27),
-    'G': (0, 16, 17),
-    'H': (1, 18, 19),
-}
-
-class GyroAxel:
-    def __init__(self, slot='A', address=0x68):
-        slot = slot.upper()
-        if slot not in _SLOT_MAP:
-            raise ValueError(f"Invalid slot '{slot}'. Use A, B, D, E, or F (C is not I2C-compatible)")
-        bus, sda_pin, scl_pin = _SLOT_MAP[slot]
-        self.i2c = I2C(bus, sda=Pin(sda_pin), scl=Pin(scl_pin))
+class MPU6050:
+    def __init__(self, bus, sda, scl, address=0x68, soft_i2c=False):
+        self.bus = bus
+        self.sda = sda
+        self.scl = scl
         self.address = address
-        self.wake()
+        self.soft_i2c = soft_i2c
+
+        if self.soft_i2c:
+            self.i2c = SoftI2C(Pin(self.scl), Pin(self.sda))
+        else:
+            self.i2c = I2C(self.bus, scl=Pin(self.scl), sda=Pin(self.sda))
+        
+        try:
+            self.wake()
+            time.sleep_ms(100)
+        except Exception as e:
+            raise RuntimeError("Failed to wake up GyroAxel. Check wiring and connection.") from e
 
         self._tilt_listeners = {
             "forward": [],

@@ -1,4 +1,4 @@
-from machine import I2C, Pin
+from machine import I2C, Pin, SoftI2C
 from math import sqrt
 from utime import sleep_ms
 # Registers
@@ -36,31 +36,24 @@ def rgb2hsv(r, g, b):
         }[high]
         h /= 6
     return {'hue':h*360,'sat':s, 'val':v}
-    
-_SLOT_MAP = {
-    'A': (0, 0, 1),
-    'B': (1, 2, 3),
-    'D': (0, 4, 5),
-    'E': (1, 6, 7),
-    'F': (1, 26, 27),
-    'G': (0, 16, 17),
-    'H': (1, 18, 19),
-}
 
-class ColorSensor(object):
+class VEML6040(object):
     
-    def __init__(self, slot, freq=400000):
-        slot = slot.upper()
-        if slot not in _SLOT_MAP:
-            raise ValueError(f"Invalid slot '{slot}'. Use A, B, D, E, or F (C is not I2C-compatible)")
-        bus, sda_pin, scl_pin = _SLOT_MAP[slot]
+    def __init__(self, bus, sda, scl, address=0x10, freq=400000, soft_i2c=False):
+        self.bus = bus
+        self.sda = sda
+        self.scl = scl
+        self.address = address
+        self.freq = freq
+        self.soft_i2c = soft_i2c
 
         try:
-            self.i2c = I2C(bus, freq=freq, sda=Pin(sda_pin), scl=Pin(scl_pin))
-            #
-            self.addr = 0x10
-            self.i2c.writeto(self.addr, _CONF + _SHUTDOWN)
-            self.i2c.writeto(self.addr, _CONF + _DEFAULT_SETTINGS)
+            if self.soft_i2c:
+                self.i2c = SoftI2C(scl=Pin(self.scl), sda=Pin(self.sda))
+            else:
+                self.i2c = I2C(self.bus, scl=Pin(self.scl), sda=Pin(self.sda))
+            self.i2c.writeto(self.address, _CONF + _SHUTDOWN)
+            self.i2c.writeto(self.address, _CONF + _DEFAULT_SETTINGS)
             sleep_ms(100)
         except Exception as e:
             raise RuntimeError("Failed to initialize ColorSensor. Check wiring and connection.") from e
@@ -77,16 +70,16 @@ class ColorSensor(object):
     # Read colours from VEML6040
     # Returns raw red, green and blue readings, ambient light [Lux] and colour temperature [K]
     def readRGB(self):
-        raw_data = self.i2c.readfrom_mem(self.addr, _REG_RED, 2)        # returns a bytes object   
+        raw_data = self.i2c.readfrom_mem(self.address, _REG_RED, 2)        # returns a bytes object   
         u16red = int.from_bytes(raw_data, 'little')
         
-        raw_data = (self.i2c.readfrom_mem(self.addr, _REG_GREEN, 2))    # returns a bytes object
+        raw_data = (self.i2c.readfrom_mem(self.address, _REG_GREEN, 2))    # returns a bytes object
         u16grn = int.from_bytes(raw_data, 'little')
         
-        raw_data = (self.i2c.readfrom_mem(self.addr, _REG_BLUE, 2))     # returns a bytes object
+        raw_data = (self.i2c.readfrom_mem(self.address, _REG_BLUE, 2))     # returns a bytes object
         u16blu = int.from_bytes(raw_data, 'little')
         
-        raw_data = (self.i2c.readfrom_mem(self.addr, _REG_WHITE, 2))    # returns a bytes object
+        raw_data = (self.i2c.readfrom_mem(self.address, _REG_WHITE, 2))    # returns a bytes object
         data_white_int = int.from_bytes(raw_data, 'little')
         
         # Generate the XYZ matrix based on https://www.vishay.com/docs/84331/designingveml6040.pdf
@@ -146,6 +139,6 @@ class ColorSensor(object):
 
      # Measures ambient light in Lux
     def lux(self):
-        raw_data = self.i2c.readfrom_mem(self.addr, _REG_GREEN, 2)
+        raw_data = self.i2c.readfrom_mem(self.address, _REG_GREEN, 2)
         green = int.from_bytes(raw_data, 'little')
         return round(green * _G_SENSITIVITY, 2)
