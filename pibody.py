@@ -2,6 +2,7 @@ from libs.i2c.BME280 import BME280
 from libs.i2c.MPU6050 import MPU6050
 from libs.i2c.VEML6040 import VEML6040
 from libs.i2c.VL53L0X import VL53L0X
+from libs.i2c.SSD1306 import SSD1306
 from libs.general.RotaryEncoder import RotaryEncoder
 from libs.general.NeoPixelPlus import NeoPixelPlus
 from libs.general.BuzzerPlus import BuzzerPlus
@@ -41,6 +42,11 @@ class ColorSensor(VEML6040):
 class DistanceSensor(VL53L0X):
     def __init__(self, slot, soft_i2c=False):
         super().__init__(*get_slot_pins(slot), soft_i2c=soft_i2c)
+
+class OLED(SSD1306):
+    def __init__(self, slot):
+        bus, sda, scl = get_slot_pins(slot)
+        super().__init__(width=128, height=64, bus=bus, sda=sda, scl=scl)
 
 class EncoderSensor(RotaryEncoder):
     def __init__(self, slot):
