@@ -6,6 +6,7 @@ from libs.general.RotaryEncoder import RotaryEncoder
 from libs.general.NeoPixelPlus import NeoPixelPlus
 from libs.general.BuzzerPlus import BuzzerPlus
 from libs.general.ServoPlus import ServoPlus
+from libs.DisplayPlus import DisplayPlus
 
 _SLOT_MAP = {
     'A': (0, 0, 1),
@@ -52,5 +53,10 @@ class Buzzer(BuzzerPlus):
         super().__init__(pin=sda)
 
 class LEDTower(NeoPixelPlus):
-    def __init__(self, pin, led_num=8):
+    def __init__(self, pin=8, led_num=8):
         super().__init__(pin=pin, led_num=led_num)
+
+class Display(DisplayPlus):
+    def __init__(self):
+        super().__init__()
+
