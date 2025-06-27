@@ -33,10 +33,14 @@ class DisplayPlus(st7789.ST7789):
         self.display.init()
         self.font = font_small
     
-    def text(self, text, x, y, font=None):
+    def text(self, text, x, y, font=None, fg=None, bg=None):
         if font is None:
             font = self.font
-        super().text(font, text, x, y)
+        if fg is None:
+            fg = st7789.WHITE
+        if bg is None:
+            bg = st7789.BLACK
+        super().text(font, text, x, y, fg, bg)
 
     def color(self, r, g, b):
         return st7789.color565(r, g, b)
@@ -84,6 +88,10 @@ class DisplayPlus(st7789.ST7789):
         else:
             self.polygon(buf, 0, 0, color)
 
-
-
-
+    def draw_logo(self, x=120, y=100, r=80):
+        super().fill(st7789.WHITE)
+        self.draw_poligon(x, y, r, 8, bump=0.7, fill=True, color=st7789.BLACK)
+        self.draw_poligon(x, y, r * 0.7, 4, bump=0.3, fill=True, color=st7789.WHITE, angle_offset=0)
+        self.text("Artisan", x - r, y + r, font=font, fg=st7789.BLACK, bg=st7789.WHITE)
+        self.text("Education", x - r, y + r + 32, font=font, fg=st7789.BLACK, bg=st7789.WHITE)
+        self.text("artisan.education", 100, 300, fg=st7789.BLACK, bg=st7789.WHITE)
