@@ -26,8 +26,8 @@ SET_CHARGE_PUMP     = const(0x8d)
 
 
 class SSD1306:
-    def __init__(self, width, height, bus, sda, scl, addr=0x3c, external_vcc=False):
-        self.i2c = I2C(id=bus, sda=sda, scl=scl)
+    def __init__(self, width, height, bus, sda, scl, addr=0x3c):
+        self.i2c = I2C(bus, sda=sda, scl=scl)
         self.addr = addr
         self.temp = bytearray(2)
         # Add an extra byte to the data buffer to hold an I2C data/command byte
@@ -130,3 +130,4 @@ class SSD1306:
                 x = int(x0 + xr * math.cos(rad))
                 y = int(y0 + yr * math.sin(rad))
                 self.pixel(x, y, c)
+
