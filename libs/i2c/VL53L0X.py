@@ -1,17 +1,9 @@
-from machine import I2C, Pin, SoftI2C
 import utime
 
 class VL53L0X:
-    def __init__(self, bus, sda, scl, address=0x29, soft_i2c=False):
-        self.bus = bus
-        self.sda = sda
-        self.scl = scl
+    def __init__(self, i2c, address=0x29):
+        self.i2c = i2c
         self.address = address
-        # self.i2c = None
-        if soft_i2c:
-            self.i2c = SoftI2C(scl=Pin(self.scl), sda=Pin(self.sda))
-        else:
-            self.i2c = I2C(self.bus, scl=Pin(self.scl), sda=Pin(self.sda))
 
         self._started = False
         self._on_close = None

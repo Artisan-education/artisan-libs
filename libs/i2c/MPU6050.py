@@ -1,22 +1,13 @@
 # MPU-6050 Simple MicroPython Library with Tilt Event Support
 # MIT License
 
-from machine import I2C, Pin, SoftI2C
 import time
 
 class MPU6050:
-    def __init__(self, bus, sda, scl, address=0x68, soft_i2c=False):
-        self.bus = bus
-        self.sda = sda
-        self.scl = scl
+    def __init__(self, i2c, address=0x68):
+        self.i2c = i2c
         self.address = address
-        self.soft_i2c = soft_i2c
 
-        if self.soft_i2c:
-            self.i2c = SoftI2C(Pin(self.scl), Pin(self.sda))
-        else:
-            self.i2c = I2C(self.bus, scl=Pin(self.scl), sda=Pin(self.sda))
-        
         try:
             self.wake()
             time.sleep_ms(100)

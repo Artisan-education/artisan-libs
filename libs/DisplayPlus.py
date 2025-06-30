@@ -1,5 +1,5 @@
-import st7789
 from machine import Pin, SPI
+import st7789
 import vga2_8x16 as font_small
 import vga2_bold_16x32 as font
 import math
@@ -31,11 +31,20 @@ class DisplayPlus(st7789.ST7789):
             buffer_size=buffer_size)
         self.display = self
         self.display.init()
-        self.font = font_small
+        self.font_small = font_small
+        self.font_bold = font
+        self.BLACK = st7789.BLACK
+        self.BLUE = st7789.BLUE
+        self.RED = st7789.RED
+        self.GREEN = st7789.GREEN
+        self.CYAN = st7789.CYAN
+        self.MAGENTA = st7789.MAGENTA
+        self.YELLOW = st7789.YELLOW
+        self.WHITE = st7789.WHITE
     
     def text(self, text, x, y, font=None, fg=None, bg=None):
         if font is None:
-            font = self.font
+            font = self.font_small
         if fg is None:
             fg = st7789.WHITE
         if bg is None:

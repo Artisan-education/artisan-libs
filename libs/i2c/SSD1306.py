@@ -1,8 +1,6 @@
 # MicroPython SSD1306 OLED driver, I2C and SPI interfaces
 import framebuf
 import math
-from machine import I2C
-
 
 # register definitions
 SET_CONTRAST        = const(0x81)
@@ -26,8 +24,8 @@ SET_CHARGE_PUMP     = const(0x8d)
 
 
 class SSD1306:
-    def __init__(self, width, height, bus, sda, scl, addr=0x3c):
-        self.i2c = I2C(bus, sda=sda, scl=scl)
+    def __init__(self, i2c, width=128, height=64, addr=0x3c):
+        self.i2c = i2c
         self.addr = addr
         self.temp = bytearray(2)
         # Add an extra byte to the data buffer to hold an I2C data/command byte

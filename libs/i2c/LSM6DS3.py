@@ -1,5 +1,3 @@
-from machine import I2C, Pin, SoftI2C
-
 # Registers
 WHO_AM_I = const(0x0F)
 CTRL2_G = const(0x11)
@@ -47,18 +45,10 @@ def twos_comp(val, bits=16):
 
 
 class LSM6DS3:
-    def __init__(self, bus, sda, scl, soft_i2c=False, address=0x6A, mode=NORMAL_MODE_104HZ):
-        self.bus = bus
-        self.sda = sda
-        self.scl = scl
+    def __init__(self, i2c, address=0x6A, mode=NORMAL_MODE_104HZ):
         self.address = address
-        self.soft_i2c = soft_i2c
         self.mode = mode
-
-        if self.soft_i2c:
-            self.i2c = SoftI2C(Pin(self.scl), Pin(self.sda))
-        else:
-            self.i2c = I2C(self.bus, scl=Pin(self.scl), sda=Pin(self.sda))
+        self.i2c = i2c
 
         # Set gyro mode/enable
         self.i2c.writeto_mem(self.address, CTRL2_G, bytearray([self.mode]))

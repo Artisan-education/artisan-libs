@@ -1,4 +1,3 @@
-from machine import I2C, Pin, SoftI2C
 from math import sqrt
 from utime import sleep_ms
 # Registers
@@ -39,19 +38,13 @@ def rgb2hsv(r, g, b):
 
 class VEML6040(object):
     
-    def __init__(self, bus, sda, scl, address=0x10, freq=400000, soft_i2c=False):
-        self.bus = bus
-        self.sda = sda
-        self.scl = scl
+    def __init__(self, i2c, address=0x10, freq=400000):
+        self.i2c = i2c
         self.address = address
         self.freq = freq
-        self.soft_i2c = soft_i2c
+
 
         try:
-            if self.soft_i2c:
-                self.i2c = SoftI2C(scl=Pin(self.scl), sda=Pin(self.sda))
-            else:
-                self.i2c = I2C(self.bus, scl=Pin(self.scl), sda=Pin(self.sda))
             self.i2c.writeto(self.address, _CONF + _SHUTDOWN)
             self.i2c.writeto(self.address, _CONF + _DEFAULT_SETTINGS)
             sleep_ms(100)

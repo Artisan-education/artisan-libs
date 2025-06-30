@@ -1,5 +1,8 @@
-from libs.i2c.BME280 import BME280
+from machine import Pin, I2C, SoftI2C
+
+from libs.i2c.BME280 import BME280  
 from libs.i2c.MPU6050 import MPU6050
+from libs.i2c.LSM6DS3 import LSM6DS3
 from libs.i2c.VEML6040 import VEML6040
 from libs.i2c.VL53L0X import VL53L0X
 from libs.i2c.SSD1306 import SSD1306
@@ -27,26 +30,37 @@ def get_slot_pins(slot):
     bus, sda, scl = _SLOT_MAP[slot]
     return (bus, sda, scl)
 
+def get_i2c(slot, soft_i2c=False):
+    bus, sda, scl = get_slot_pins(slot)
+    if soft_i2c:
+        return SoftI2C(scl=Pin(scl), sda=Pin(sda))
+    else:
+        return I2C(bus, scl=Pin(scl), sda=Pin(sda))
+
 class ClimateSensor(BME280):
     def __init__(self, slot, soft_i2c=False):
-        super().__init__(*get_slot_pins(slot), soft_i2c=soft_i2c)
+        super().__init__(get_i2c(slot, soft_i2c))
 
-class GyroAxelSensor(MPU6050):
-    def __init__(self, slot, soft_i2c=False):
-        super().__init__(*get_slot_pins(slot), soft_i2c=soft_i2c)
+def GyroAxelSensor(slot, soft_i2c=False):
+    i2c = get_i2c(slot, soft_i2c)
+    if 0x68 in i2c.scan():
+        return MPU6050(i2c)
+    elif 0x6A in i2c.scan():
+        return LSM6DS3(i2c)
+    else:
+        raise ValueError(f"Invalid i2c address '{i2c.scan()}' for slot '{slot}'")  
 
 class ColorSensor(VEML6040):
     def __init__(self, slot, soft_i2c=False):
-        super().__init__(*get_slot_pins(slot), soft_i2c=soft_i2c)
+        super().__init__(get_i2c(slot, soft_i2c))
 
 class DistanceSensor(VL53L0X):
     def __init__(self, slot, soft_i2c=False):
-        super().__init__(*get_slot_pins(slot), soft_i2c=soft_i2c)
+        super().__init__(get_i2c(slot, soft_i2c))
 
 class OLED(SSD1306):
-    def __init__(self, slot):
-        bus, sda, scl = get_slot_pins(slot)
-        super().__init__(width=128, height=64, bus=bus, sda=sda, scl=scl)
+    def __init__(self, slot, soft_i2c=False, width=128, height=64):
+        super().__init__(get_i2c(slot, soft_i2c), width=width, height=height)
 
 class EncoderSensor(RotaryEncoder):
     def __init__(self, slot):
