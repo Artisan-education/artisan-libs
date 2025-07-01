@@ -57,8 +57,30 @@ class DisplayPlus(st7789.ST7789):
                 dy = center_y + r * math.sin(math.pi/180*i)
                 self.display.pixel(round(dx), round(dy), color)
 
+    def linear_bar(self, x, y, length, value, min_value, max_value, height=5, border=False, color=st7789.GREEN, border_color=st7789.WHITE, background_color=st7789.BLACK):
+        even = 1 - height % 2
+        n = int((height-1-even)/2)
+        
+        if border:
+            self.rect(x-1, y-n-1, length+3, height+2, border_color)
+            line_color = background_color
+        else:
+            for i in range(2):
+                self.vline(x-1-i, y-n, height, border_color)
+                self.vline(x + length + 1 + i, y-n, height, border_color)
+            line_color = border_color
 
-    def progress_bar(self, center_x, center_y, r, value, min_value, max_value, width=2, color=st7789.GREEN, background_color=st7789.WHITE):
+        value = min(max(value - min_value, 0), max_value - min_value) / (max_value - min_value)
+
+        for i in range(height):
+            self.line(x, y - n + i, x + math.floor(length * value), y - n + i, color)
+        for i in range(n):
+            self.line(x + math.floor(length * value), y - 1 - i, x + length - 1, y - 1 - i, background_color)
+            self.line(x + math.floor(length * value), y + 1 + even + i, x + length - 1, y + 1 + even + i, background_color)
+        self.line(x + math.floor(length * value), y, x + length, y, line_color)
+        self.line(x + math.floor(length * value), y + even, x + length, y + even, line_color)
+
+    def circular_bar(self, center_x, center_y, r, value, min_value, max_value, width=2, color=st7789.GREEN, background_color=st7789.WHITE):
         # Get angle from value
         angle = min(max(value - min_value, 0), max_value - min_value) / (max_value - min_value) * 360
         # Draw progress bar
